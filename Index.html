@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>TeachEasy School Manager</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{
+  margin:0; padding:0;
+  background:#eef0ff;
+  font-family:Arial, sans-serif;
+}
+.box{
+  max-width:500px;margin:auto;margin-top:40px;
+  background:white;padding:20px;border-radius:10px;
+  box-shadow:0 4px 18px rgba(0,0,0,0.1);
+}
+.section{
+  display:none;max-width:700px;margin:auto;margin-top:20px;
+}
+.card{
+  background:white;padding:15px;margin:10px 0;border-radius:10px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.08);
+}
+input,textarea,select{
+  width:100%;padding:10px;border-radius:6px;border:1px solid #ccc;
+  margin:8px 0;font-size:15px;
+}
+.btn{
+  width:100%;padding:12px;font-size:16px;background:#4f46e5;
+  border:none;border-radius:8px;color:white;cursor:pointer;margin-top:10px;
+}
+.small-btn{
+  padding:6px 10px;background:#4f46e5;color:white;border:none;
+  border-radius:5px;font-size:13px;
+}
+.list{
+  background:#f0efff;padding:10px;border-radius:8px;margin:8px 0;
+}
+.logo{
+  width:80px;display:block;margin:auto;margin-bottom:10px;
+}
+h1{text-align:center;margin:0;font-size:24px;}
+h2{text-align:center;margin:0;margin-bottom:15px;}
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div id="loginBox" class="box">
+<h1>TeachEasy School Manager</h1>
+<img src="https://upload.wikimedia.org/wikipedia/commons/a/ab/Logo_Teacher.png" class="logo">
+<h2>Login</h2>
+
+<input id="loginEmail" placeholder="Email">
+<input id="loginPass" type="password" placeholder="Password">
+
+<button class="btn" onclick="login()">Login</button>
+<button class="btn" style="background:#777" onclick="showSignup()">Create Account</button>
+</div>
+
+<!-- SIGNUP -->
+<div id="signupBox" class="box" style="display:none;">
+<h1>TeachEasy School Manager</h1>
+<img src="https://upload.wikimedia.org/wikipedia/commons/a/ab/Logo_Teacher.png" class="logo">
+<h2>Signup</h2>
+
+<input id="suName" placeholder="Full Name">
+<input id="suEmail" placeholder="Email">
+<input id="suPass" type="password" placeholder="Password (Min 6)">
+<input id="suPass2" type="password" placeholder="Confirm Password">
+
+<button class="btn" onclick="signup()">Create Account</button>
+<button class="btn" style="background:#777" onclick="showLogin()">Back</button>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard" class="section">
+
+<div class="card">
+<button class="small-btn" onclick="logout()" style="float:right;">Logout</button>
+<h1>TeachEasy School Manager</h1>
+<img src="https://upload.wikimedia.org/wikipedia/commons/a/ab/Logo_Teacher.png" class="logo">
+<h2>Teacher Dashboard</h2>
+</div>
+
+<!-- STUDENT FORM -->
+<div class="card">
+<h3>Add Student</h3>
+
+<input id="stName" placeholder="Student Name">
+<input id="stClass" placeholder="Class">
+<input id="stAadhar" placeholder="Aadhaar No">
+<input id="stParent" placeholder="Parent Name">
+<input id="stPhone" placeholder="Parent Phone">
+
+<button class="btn" onclick="addStudent()">Add Student</button>
+</div>
+
+<!-- STUDENT LIST -->
+<div class="card">
+<h3>Students List</h3>
+<div id="stuList"></div>
+</div>
+
+<!-- ATTENDANCE -->
+<div class="card">
+<h3>Attendance</h3>
+
+<select id="attStudent"></select>
+<select id="attStatus">
+<option>Present</option>
+<option>Absent</option>
+<option>Leave</option>
+</select>
+
+<button class="btn" onclick="markAttendance()">Mark Attendance</button>
+
+<h4>Today’s Attendance</h4>
+<div id="attList"></div>
+</div>
+
+<!-- HOMEWORK -->
+<div class="card">
+<h3>Add Homework</h3>
+
+<input id="hwTitle" placeholder="Homework Title">
+<textarea id="hwDesc" placeholder="Description"></textarea>
+<input type="date" id="hwDate">
+
+<button class="btn" onclick="addHW()">Add Homework</button>
+
+<h4>Homework List</h4>
+<div id="hwList"></div>
+</div>
+
+<!-- NOTICE -->
+<div class="card">
+<h3>Add Notice / Holiday</h3>
+
+<input id="ntTitle" placeholder="Notice Title">
+<textarea id="ntDesc" placeholder="Description"></textarea>
+
+<button class="btn" onclick="addNotice()">Add Notice</button>
+
+<h4>Notices</h4>
+<div id="ntList"></div>
+</div>
+
+</div>
+
+<script>
+/* STORAGE */
+function get(k){ return JSON.parse(localStorage.getItem(k)||"[]"); }
+function set(k,v){ localStorage.setItem(k,JSON.stringify(v)); }
+
+/* LOGIN SYSTEM */
+function showSignup(){ signupBox.style.display="block"; loginBox.style.display="none"; }
+function showLogin(){ signupBox.style.display="none"; loginBox.style.display="block"; }
+
+function signup(){
+ let n=suName.value.trim();
+ let e=suEmail.value.trim().toLowerCase();
+ let p1=suPass.value, p2=suPass2.value;
+
+ if(!n||!e||!p1) return alert("Fill all fields");
+ if(p1.length<6) return alert("Password too short");
+ if(p1!==p2) return alert("Passwords do not match");
+
+ let u=get("users");
+ if(u.some(x=>x.email===e)) return alert("Email already exists");
+
+ u.push({id:Date.now(),name:n,email:e,pass:p1});
+ set("users",u);
+
+ alert("Account created!");
+ showLogin();
+}
+
+function login(){
+ let e=loginEmail.value.trim().toLowerCase();
+ let p=loginPass.value.trim();
+
+ let u=get("users").find(x=>x.email===e && x.pass===p);
+
+ if(!u) return alert("Wrong email or password");
+
+ localStorage.setItem("current",u.id);
+ loadDashboard();
+}
+
+/* DASHBOARD */
+function logout(){ localStorage.removeItem("current"); location.reload(); }
+
+function loadDashboard(){
+ loginBox.style.display="none";
+ signupBox.style.display="none";
+ dashboard.style.display="block";
+
+ loadStudents();
+ loadAttendanceNames();
+ loadAttendanceList();
+ loadHW();
+ loadNotice();
+}
+
+/* KEYS */
+function stuKey(){ return "stu_"+localStorage.getItem("current"); }
+function attKey(){ return "att_"+localStorage.getItem("current"); }
+function hwKey(){ return "hw_"+localStorage.getItem("current"); }
+function ntKey(){ return "nt_"+localStorage.getItem("current"); }
+
+/* STUDENTS */
+function addStudent(){
+ let n=stName.value.trim();
+ if(!n) return alert("Enter student name");
+
+ let arr=get(stuKey());
+ arr.push({
+   id:"S"+Date.now(),
+   name:n,class:stClass.value,
+   aadhar:stAadhar.value,
+   parent:stParent.value,
+   phone:stPhone.value
+ });
+ set(stuKey(),arr);
+
+ stName.value=stClass.value=stAadhar.value=stParent.value=stPhone.value="";
+ loadStudents(); loadAttendanceNames();
+}
+
+function loadStudents(){
+ let arr=get(stuKey()), out="";
+ arr.forEach(s=>{
+   out+=`<div class="list">
+     <b>${s.name}</b><br>
+     Class: ${s.class}<br>
+     Aadhaar: ${s.aadhar}<br>
+     Parent: ${s.parent} (${s.phone})
+   </div>`;
+ });
+ stuList.innerHTML = out || "No students added yet";
+}
+
+/* ATTENDANCE */
+function loadAttendanceNames(){
+ let arr=get(stuKey()), out="";
+ arr.forEach(s=> out+=`<option>${s.name}</option>`);
+ attStudent.innerHTML = out;
+}
+
+function markAttendance(){
+ let arr=get(attKey());
+ arr.push({
+   id:"A"+Date.now(),
+   name:attStudent.value,
+   status:attStatus.value,
+   date:new Date().toDateString()
+ });
+ set(attKey(),arr);
+ loadAttendanceList();
+}
+
+function loadAttendanceList(){
+ let arr=get(attKey());
+ let today=new Date().toDateString();
+
+ let out="";
+ arr.filter(a=>a.date===today)
+ .forEach(a=>{
+   out+=`<div class="list">${a.name} - <b>${a.status}</b></div>`;
+ });
+
+ attList.innerHTML = out || "No attendance today";
+}
+
+/* HOMEWORK */
+function addHW(){
+ let t=hwTitle.value.trim();
+ if(!t) return alert("Enter title");
+
+ let arr=get(hwKey());
+ arr.push({
+   id:"H"+Date.now(),
+   title:t,
+   desc:hwDesc.value,
+   date:hwDate.value
+ });
+
+ set(hwKey(),arr);
+
+ hwTitle.value=hwDesc.value=hwDate.value="";
+ loadHW();
+}
+
+function loadHW(){
+ let arr=get(hwKey()), out="";
+ arr.forEach(h=>{
+  out+=`<div class="list">
+   <b>${h.title}</b><br>
+   ${h.desc}<br>
+   Due: ${h.date}
+  </div>`;
+ });
+ hwList.innerHTML = out || "No homework";
+}
+
+/* NOTICE */
+function addNotice(){
+ let t=ntTitle.value.trim();
+ if(!t) return alert("Enter notice");
+
+ let arr=get(ntKey());
+ arr.push({
+   id:"N"+Date.now(),
+   title:t,
+   desc:ntDesc.value,
+   date:new Date().toDateString()
+ });
+ set(ntKey(),arr);
+
+ ntTitle.value=ntDesc.value="";
+ loadNotice();
+}
+
+function loadNotice(){
+ let arr=get(ntKey()), out="";
+ arr.forEach(n=>{
+   out+=`<div class="list">
+     <b>${n.title}</b><br>
+     ${n.desc}<br>
+     <i>${n.date}</i>
+   </div>`;
+ });
+ ntList.innerHTML = out || "No notices";
+}
+
+/* AUTO LOGIN */
+(function(){
+ let id=localStorage.getItem("current");
+ if(id) loadDashboard();
+})();
+</script>
+
+</body>
+</html>
